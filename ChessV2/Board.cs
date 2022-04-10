@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Linq;
 namespace ChessV2
 {
     public class Board
@@ -19,14 +18,16 @@ namespace ChessV2
         public HashSet<Piece> SlidingPieces = new HashSet<Piece>();
         public List<Piece> Kings = new List<Piece>();
         public Dictionary<(int, int), Piece> OccupiedSquares = new Dictionary<(int, int), Piece>();
+        public bool WhiteCaste = true;
+        public bool BlackCastle = true;
 
         public bool turn = true;
         public Board()
         {
             SlidingPieces.Add(new Rook((1, 1), (1, 1), new List<Move>(), true));
-            Pieces.Add(new Knight((2, 1), (2, 1), new List<Move>(), true));
-            SlidingPieces.Add(new Bishop((3, 1), (3, 1), new List<Move>(), true));
-            SlidingPieces.Add(new Queen((4, 1), (4, 1), new List<Move>(), true));
+            //Pieces.Add(new Knight((2, 1), (2, 1), new List<Move>(), true));
+            //SlidingPieces.Add(new Bishop((3, 1), (3, 1), new List<Move>(), true));
+            //SlidingPieces.Add(new Queen((4, 1), (4, 1), new List<Move>(), true));
             SlidingPieces.Add(new Bishop((6, 1), (6, 1), new List<Move>(), true));
             Pieces.Add(new Knight((7, 1), (7, 1), new List<Move>(), true));
             SlidingPieces.Add(new Rook((8, 1), (8, 1), new List<Move>(), true));
@@ -74,6 +75,14 @@ namespace ChessV2
             }
             foreach (Piece P in Kings)
             {
+                if (P.Colour && WhiteCaste)
+                {
+                    P.FirstMove = true;
+                }
+                if (!P.Colour && BlackCastle)
+                {
+                    P.FirstMove = true;
+                }
                 P.AIposition = P.Position;
             }
         }
@@ -287,7 +296,7 @@ namespace ChessV2
                             Pieces.Remove(pieceToDelete);
                         }
                     }
-                    if (move.P.EnPassant == true && OccupiedSquares.ContainsKey((move.Coords.Item1, move.Coords.Item2 + (turn ? -1 : 1))) && OccupiedSquares[(move.Coords.Item1, move.Coords.Item2 + (turn ? -1 : 1))].CharRep == 'P')
+                    if (move.P.EnPassant && OccupiedSquares.ContainsKey((move.Coords.Item1, move.Coords.Item2 + (turn ? -1 : 1))) && OccupiedSquares[(move.Coords.Item1, move.Coords.Item2 + (turn ? -1 : 1))].CharRep == 'P')
                     {
                         Pieces.Remove(OccupiedSquares[(move.Coords.Item1, move.Coords.Item2 + (turn ? -1 : 1))]);
                         OccupiedSquares.Remove((move.Coords.Item1, move.Coords.Item2 + (turn ? -1 : 1)));
@@ -295,6 +304,17 @@ namespace ChessV2
                     if (move.Castle)
                     {
                         ExecuteCastle(move);
+                    }
+                    if (move.P.King && move.P.FirstMove) 
+                    {
+                        if (move.P.Colour)
+                        {
+                            WhiteCaste = false;
+                        }
+                        else
+                        {
+                            BlackCastle = false;
+                        }
                     }
                     OccupiedSquares.Remove(move.P.Position);
                     move.P.Position = move.Coords;
@@ -336,7 +356,7 @@ namespace ChessV2
             checkCount = 0;
         }
 
-        private void ExecuteCastle(Move move)
+        public void ExecuteCastle(Move move)
         {
             if (move.Coords.Item1 == 7)
             {

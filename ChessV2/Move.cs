@@ -50,14 +50,7 @@ namespace ChessV2
             string str = $"{P}{files[Coords.Item1 - 1]}{Coords.Item2}";
             if (Castle)
             {
-                if (Coords.Item1==7)
-                {
-                    str = "O-O";
-                }
-                else
-                {
-                    str = "O-O-O";
-                }
+                str = Coords.Item1==7 ? "O-O" : "O-O-O";
             }
             return str;
         }

@@ -11,21 +11,14 @@ namespace ChessV2
         public List<(int, int)> BaseMoves = new List<(int, int)> { (1, 0), (-1, 0), (1, 1), (-1, 1), (1, -1), (-1, -1), (0, 1), (0, -1) };
 
 
-        public King( (int, int) position, (int, int) aiposition, List<Move> moves, bool colour, Char charRep = 'K', int pointsValue=20000, bool enPassant=false, bool king = true, bool firstMove=true, bool isPinned = false)
+        public King( (int, int) position, (int, int) aiposition, List<Move> moves, bool colour, char charRep = 'K', int pointsValue=20000, bool enPassant=false, bool king = true, bool firstMove=true, bool isPinned = false)
             : base(position, aiposition, moves, colour, charRep, pointsValue, enPassant, king, firstMove, isPinned)
         {
         }
 
         public override string ToString()
         {
-            if (Colour)
-            {
-                return WhiteKing;
-            }
-            else
-            {
-                return BlackKing;
-            }
+            return Colour ? WhiteKing : BlackKing;
         }
 
         public override List<(int, int)> GetMoves()
@@ -63,11 +56,11 @@ namespace ChessV2
                 {
                     protectedSquares.Add(moveToAdd);
                 }
-                if (FirstMove && checkCount == 0)
-                {
-                    ShortCastle(occupiedSquares, protectedSquares);
-                    LongCastle(occupiedSquares, protectedSquares);
-                }
+            }
+            if (FirstMove && checkCount == 0)
+            {
+                ShortCastle(occupiedSquares, protectedSquares);
+                LongCastle(occupiedSquares, protectedSquares);
             }
         }
 

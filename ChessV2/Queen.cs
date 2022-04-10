@@ -17,12 +17,7 @@ namespace ChessV2
 
         public override string ToString()
         {
-            if (Colour)
-            {
-                return WhiteQueen;
-            }
-            return BlackQueen;
-
+            return Colour ? WhiteQueen : BlackQueen;
         }
 
         public override List<(int, int)> GetMoves()

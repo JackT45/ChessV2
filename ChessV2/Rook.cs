@@ -9,7 +9,7 @@ namespace ChessV2
         private const string WhiteRook = "\u2656";
         public List<(int, int)> BaseMoves = new List<(int, int)>{ (0, 1), (1, 0), (0, -1), (-1, 0) };
 
-        public Rook( (int, int) position, (int, int) aiposition, List<Move> moves, bool colour, Char charRep = 'R', int pointsValue=500, bool enPassant=false, bool king = false,  bool firstMove=true, bool isPinned = false)
+        public Rook( (int, int) position, (int, int) aiposition, List<Move> moves, bool colour, char charRep = 'R', int pointsValue=500, bool enPassant=false, bool king = false,  bool firstMove=true, bool isPinned = false)
             : base(position, aiposition, moves, colour, charRep, pointsValue, enPassant, king, firstMove, isPinned)
         {
         }
@@ -21,14 +21,7 @@ namespace ChessV2
 
         public override string ToString()
         {
-            if (Colour)
-            {
-                return WhiteRook;
-            }
-            else
-            {
-                return BlackRook;
-            }
+            return Colour ? WhiteRook : BlackRook;
         }
 
         public override List<(int, int)> GetNextMoves((int, int) move)

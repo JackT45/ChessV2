@@ -138,7 +138,7 @@ namespace ChessV2
                     pinChecked = true;
                     if (CheckForPinPotential(oppositeKing))
                     {
-                        GetPinnedPiece(moves, occupiedSquares, oppositeKing, lastMove);
+                        GetPinnedPiece(moves, occupiedSquares, oppositeKing);
                     }
                 }
                 if (IsPinned)
@@ -220,14 +220,9 @@ namespace ChessV2
             {
                 piece = QueenCheckType(oppositeKing.AIposition, AIposition);
             }
-            if (piece == 'B')
-            {
-                return DiagonalPin(IsValidMove(oppositeKing.AIposition, AIposition));
-            }
-            else
-            {
-                return RookPin(IsValidMove(oppositeKing.AIposition, AIposition));
-            }
+            return piece == 'B'
+                ? DiagonalPin(IsValidMove(oppositeKing.AIposition, AIposition))
+                : RookPin(IsValidMove(oppositeKing.AIposition, AIposition));
         }
 
         private char QueenCheckType((int, int) checkPosition, (int, int) kingPosition)
@@ -249,7 +244,7 @@ namespace ChessV2
             return move.Item1 == 0 || move.Item2 == 0;
         }
 
-        private void GetPinnedPiece(List<(int, int)> moves, Dictionary<(int, int), Piece> occupiedSquares, Piece oppositeKing, Move lastMove)
+        private void GetPinnedPiece(List<(int, int)> moves, Dictionary<(int, int), Piece> occupiedSquares, Piece oppositeKing)
         {
             int PieceCount = 0;
             List<Piece> pieces = new List<Piece>();

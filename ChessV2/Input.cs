@@ -111,14 +111,7 @@ namespace ChessV2
                 {
                     return (piece, move, startFile, 0);
                 }
-                if (isStartRank)
-                {
-                    return (piece, move, 0, startRank);
-                }
-                else
-                {
-                    return (piece, move, 0, 0);
-                }
+                return isStartRank ? (piece, move, 0, startRank) : (piece, move, 0, 0);
             }
             return ('P', move, 0, 0);
         }
@@ -129,11 +122,7 @@ namespace ChessV2
             {
                 return false;
             }
-            if (input.Item2.Item1 == 0 || input.Item2.Item2 == 0)
-            {
-                return false;
-            }
-            return true;
+            return input.Item2.Item1 != 0 && input.Item2.Item2 != 0;
         }
     }
 }

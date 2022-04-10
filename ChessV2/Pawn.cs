@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 namespace ChessV2
 {
     public class Pawn : Piece
@@ -21,14 +20,7 @@ namespace ChessV2
 
         public override string ToString()
         {
-            if (Colour)
-            {
-                return WhitePawn;
-            }
-            else
-            {
-                return BlackPawn;
-            }
+            return Colour ? WhitePawn : BlackPawn;
         }
 
         public override List<(int, int)> GetMoves()

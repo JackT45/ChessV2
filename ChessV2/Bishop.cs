@@ -9,21 +9,14 @@ namespace ChessV2
 
         public List<(int, int)> BaseMoves = new List<(int, int)> { (1, 1), (1, -1), (-1, -1), (-1, 1), };
 
-        public Bishop((int, int) position, (int, int) aiposition, List<Move> moves, bool colour, Char charRep = 'B', int pointsValue=330, bool enPassant=false, bool king = false, bool firstMove = false, bool isPinned = false)
+        public Bishop((int, int) position, (int, int) aiposition, List<Move> moves, bool colour, char charRep = 'B', int pointsValue=330, bool enPassant=false, bool king = false, bool firstMove = false, bool isPinned = false)
             : base(position, aiposition, moves, colour, charRep, pointsValue, enPassant, king, firstMove, isPinned)
         {
         }
 
         public override string ToString()
         {
-            if (Colour)
-            {
-                return WhiteBishop;
-            }
-            else
-            {
-                return BlackBishop;
-            }
+            return Colour ? WhiteBishop : BlackBishop;
         }
 
         public override List<(int, int)> GetMoves()
