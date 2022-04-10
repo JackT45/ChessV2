@@ -21,7 +21,7 @@ namespace ChessV2
         private List<Move> MakeMove(Board gameboard, Move move)
         {
             List<Move> changesToRevert = new List<Move>();
-            changesToRevert.Add(new Move(move.P, (move.P.AIposition), move.P.AIposition.Item1, move.P.AIposition.Item2, false, move.Castle ? true : false));
+            changesToRevert.Add(new Move(move.P, move.P.AIposition, move.P.AIposition.Item1, move.P.AIposition.Item2, false, move.Castle));
             gameboard.OccupiedSquares.Remove(move.P.AIposition);
             if (gameboard.OccupiedSquares.ContainsKey(move.Coords))
             {
@@ -29,7 +29,7 @@ namespace ChessV2
                 gameboard.OccupiedSquares.Remove(move.Coords);
                 
             }
-            if (move.P.EnPassant == true && gameboard.OccupiedSquares.ContainsKey((move.Coords.Item1, move.Coords.Item2 + (gameboard.turn ? -1 : 1))) && gameboard.OccupiedSquares[(move.Coords.Item1, move.Coords.Item2 + (gameboard.turn ? -1 : 1))].CharRep == 'P')
+            if (move.P.EnPassant && gameboard.OccupiedSquares.ContainsKey((move.Coords.Item1, move.Coords.Item2 + (gameboard.turn ? -1 : 1))) && gameboard.OccupiedSquares[(move.Coords.Item1, move.Coords.Item2 + (gameboard.turn ? -1 : 1))].CharRep == 'P')
             {
                 changesToRevert.Add(new Move(gameboard.OccupiedSquares[(move.Coords.Item1, move.Coords.Item2 + (gameboard.turn ? -1 : 1))], (move.Coords.Item1, move.Coords.Item2 + (gameboard.turn ? -1 : 1)), move.Coords.Item1, move.Coords.Item2 + (gameboard.turn ? -1 : 1)));
                 gameboard.OccupiedSquares.Remove((move.Coords.Item1, move.Coords.Item2 + (gameboard.turn ? -1 : 1)));
@@ -39,26 +39,28 @@ namespace ChessV2
                 if (move.Coords.Item1 == 7)
                 {
                     Piece rookToCastle = gameboard.OccupiedSquares[(8, move.P.AIposition.Item2)];
-                    changesToRevert.Add(new Move(rookToCastle, (rookToCastle.AIposition), rookToCastle.AIposition.Item1, rookToCastle.AIposition.Item2, false, true));
+                    changesToRevert.Add(new Move(rookToCastle, rookToCastle.AIposition, rookToCastle.AIposition.Item1, rookToCastle.AIposition.Item2, false, true));
                     rookToCastle.AIposition = (6, move.P.AIposition.Item2);
-                    rookToCastle.FirstMove = false;
                     gameboard.OccupiedSquares.Remove((8, move.P.AIposition.Item2));
                     gameboard.OccupiedSquares[(6, move.P.AIposition.Item2)] = rookToCastle;
                 }
                 else
                 {
                     Piece rookToCastle = gameboard.OccupiedSquares[(1, move.P.AIposition.Item2)];
-                    changesToRevert.Add(new Move(rookToCastle, (rookToCastle.AIposition), rookToCastle.AIposition.Item1, rookToCastle.AIposition.Item2, false, true));
-                    rookToCastle.Position = (4, move.P.AIposition.Item2);
+                    changesToRevert.Add(new Move(rookToCastle, rookToCastle.AIposition, rookToCastle.AIposition.Item1, rookToCastle.AIposition.Item2, false, true));
                     rookToCastle.AIposition = (4, move.P.AIposition.Item2);
-                    rookToCastle.FirstMove = false;
                     gameboard.OccupiedSquares.Remove((1, move.P.AIposition.Item2));
                     gameboard.OccupiedSquares[(4, move.P.AIposition.Item2)] = rookToCastle;
                 }
             }
             gameboard.OccupiedSquares[move.Coords] = move.P;
             move.P.AIposition = move.Coords;
-            move.P.FirstMove = false;
+            // This not optimal, probably introduces bugs to move gen with regard to castles
+            // Considering implementing event for Rook.Position changing to limit searching for castles replacing rook.FirstMove
+            if (move.P.CharRep != 'R')
+            {
+                move.P.FirstMove = false;
+            }
             gameboard.ClearAllMoves();
             return changesToRevert;
         }
@@ -86,6 +88,17 @@ namespace ChessV2
                 if (piece.Castle)
                 {
                     piece.P.FirstMove = true;
+                }
+                if (piece.P.King)
+                {
+                    if (piece.P.Colour && gameboard.WhiteCaste && piece.Coords == (5, 1))
+                    {
+                        piece.P.FirstMove = true;
+                    }
+                    if (!piece.P.Colour && gameboard.BlackCastle && piece.Coords == (5, 8))
+                    {
+                        piece.P.FirstMove = true;
+                    }
                 }
                 gameboard.OccupiedSquares[piece.Coords] = piece.P;
                 gameboard.OccupiedSquares[piece.Coords].AIposition = piece.Coords;
@@ -200,7 +213,6 @@ namespace ChessV2
 
         public void FindBestMove(Board gameboard)
         {
-            int checks = gameboard.checkCount;
             Root.Value = GenerateTree(gameboard, Root, 0, true);
             Console.WriteLine(Root.Value);
             foreach (MoveNode child in Root.Children)
@@ -236,6 +248,18 @@ namespace ChessV2
                 if (gameboard.Pieces.Contains(gameboard.OccupiedSquares[move.Coords]))
                 {
                     gameboard.Pieces.Remove(gameboard.OccupiedSquares[move.Coords]);
+                }
+            }
+            if (move.Castle)
+            {
+                gameboard.ExecuteCastle(move);
+                if (move.P.Colour)
+                {
+                    gameboard.WhiteCaste = false;
+                }
+                else
+                {
+                    gameboard.BlackCastle = false;
                 }
             }
             gameboard.OccupiedSquares[move.Coords] = move.P;
