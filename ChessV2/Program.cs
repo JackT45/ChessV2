@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ChessV2
 {
@@ -7,25 +8,22 @@ namespace ChessV2
     {
         static void Main(string[] args)
         {
-            AI ai = new AI(new MoveNode(new Move(new Piece((0, 0), (0,0), new List<(int, int)>(), true, 'U', 0, false, false, false, false), (0, 0), 0, 0), new List<MoveNode>()));
+            Move HoldMove = new Move(new Piece((0, 0), (0, 0), new List<Move>(), true, 'U', 0, false, false, false, false), (0, 0), 0, 0);
+            AI ai = new AI(new MoveNode(HoldMove, new List<MoveNode>(), 0));
             Board gameboard = new Board();
             while (true)
             {
                 gameboard.turn = true;
                 Console.WriteLine(gameboard);
 
-                gameboard.GenerateMoves();
-                gameboard.SelectLegalMoves();
-
-                foreach (Move legalmove in gameboard.LegalMoves)
-                {
-                    Console.Write($"{legalmove}, ");
-                }
+                gameboard.GenerateMoves(gameboard.MoveCount == 0 ? HoldMove : gameboard.MoveHistory.Last());
+                gameboard.PrintLegalMoves();
+                
                 Console.WriteLine();
             start:
                 string userInput = Console.ReadLine();
 
-                Input move = new Input(userInput);
+                Input move = new Input(userInput, gameboard.turn);
 
                 if (!move.CheckValidInput(move.ReturnInput()))
                 {
@@ -38,8 +36,20 @@ namespace ChessV2
 
                 if (gameboard.MakeMove(move.ReturnInput()))
                 {
+                    Console.WriteLine(gameboard);
                     gameboard.turn = false;
-                    ai.FindBestMove(gameboard);
+                    if (gameboard.MoveCount < 1)
+                    {
+                        gameboard.GenerateMoves(gameboard.MoveHistory.Last());
+                        gameboard.PrintLegalMoves();
+                        userInput = Console.ReadLine();
+                        Input AiMove = new Input(userInput, gameboard.turn);
+                        gameboard.MakeMove(AiMove.ReturnInput());
+                    }
+                    else
+                    {
+                        ai.FindBestMove(gameboard);
+                    } 
                 }
                 else
                 {

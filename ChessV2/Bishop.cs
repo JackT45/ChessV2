@@ -9,7 +9,7 @@ namespace ChessV2
 
         public List<(int, int)> BaseMoves = new List<(int, int)> { (1, 1), (1, -1), (-1, -1), (-1, 1), };
 
-        public Bishop((int, int) position, (int, int) aiposition, List<(int, int)> moves, bool colour, Char charRep = 'B', int pointsValue=3, bool enPassant=false, bool king = false, bool firstMove = false, bool isPinned = false)
+        public Bishop((int, int) position, (int, int) aiposition, List<Move> moves, bool colour, Char charRep = 'B', int pointsValue=330, bool enPassant=false, bool king = false, bool firstMove = false, bool isPinned = false)
             : base(position, aiposition, moves, colour, charRep, pointsValue, enPassant, king, firstMove, isPinned)
         {
         }

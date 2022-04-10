@@ -24,18 +24,41 @@ namespace ChessV2
             get; set;
         }
 
-        public Move(Piece p, (int, int) coords, int startfile, int startrank)
+        public bool Castle
+        {
+            get; set;
+        }
+
+        public bool Capture
+        {
+            get; set;
+        }
+
+        public Move(Piece p, (int, int) coords, int startfile, int startrank, bool capture=false, bool castle = false)
         {
             P = p;
             Coords = coords;
             StartFile = startfile;
             StartRank = startrank;
+            Capture = capture;
+            Castle = castle;
         }
 
         public override string ToString()
         {
             string files = "ABCDEFGH";
             string str = $"{P}{files[Coords.Item1 - 1]}{Coords.Item2}";
+            if (Castle)
+            {
+                if (Coords.Item1==7)
+                {
+                    str = "O-O";
+                }
+                else
+                {
+                    str = "O-O-O";
+                }
+            }
             return str;
         }
 

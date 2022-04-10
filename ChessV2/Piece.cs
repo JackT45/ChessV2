@@ -5,6 +5,9 @@ namespace ChessV2
 {
     public class Piece
     {
+        //Piece may be better as an interface, rook, bishop and queen share move generation methods but none others do
+        //Generate moves parameters is messy because of this, with only some of each of pieces requiring all of the parameters
+        //If can iterate over in the same way then may be worth it, using a superclass of SlidingPieces for minimum repitition of code
         public (int, int) Position
         {
             get; set;
@@ -30,7 +33,7 @@ namespace ChessV2
             get; set;
         }
 
-        public List<(int, int)> Moves
+        public List<Move> Moves
         {
             get; set;
         }
@@ -55,7 +58,7 @@ namespace ChessV2
             get; set;
         }
 
-        public Piece((int, int) position, (int, int) aiposition, List<(int, int)> moves, bool colour, char charRep, int pointsValue, bool enPassant, bool king, bool firstMove, bool isPinned)
+        public Piece((int, int) position, (int, int) aiposition, List<Move> moves, bool colour, char charRep, int pointsValue, bool enPassant, bool king, bool firstMove, bool isPinned)
         {
             CharRep = charRep;
             Position = position;
@@ -72,7 +75,7 @@ namespace ChessV2
 
         public virtual (int, int) IsValidMove((int, int) move, (int, int) position)
         {
-            (int, int) checkMove = (Math.Abs(move.Item1 - AIposition.Item1), Math.Abs(move.Item2 - AIposition.Item2));
+            (int, int) checkMove = (Math.Abs(move.Item1 - position.Item1), Math.Abs(move.Item2 - position.Item2));
             return checkMove;
         }
 
@@ -121,10 +124,13 @@ namespace ChessV2
             return nextMoves;
         }
 
-        public virtual void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, List<Move> moveHistory)
+        public virtual void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, Move lastMove, ref HashSet<Char> checkingPieces)
         {
             bool pinChecked = false;
-
+            if (IsPinned)
+            {
+                return;
+            }
             foreach ((int, int) move in moves)
             {
                 if (!turn && pinChecked == false)
@@ -132,7 +138,7 @@ namespace ChessV2
                     pinChecked = true;
                     if (CheckForPinPotential(oppositeKing))
                     {
-                        GetPinnedPiece(moves, occupiedSquares, oppositeKing, moveHistory);
+                        GetPinnedPiece(moves, occupiedSquares, oppositeKing, lastMove);
                     }
                 }
                 if (IsPinned)
@@ -162,6 +168,7 @@ namespace ChessV2
                     {
                         illegalKingMoves.Add(coord);
                     }
+                    checkingPieces.Add(CharRep);
                     blockCheckMoves.Add(AIposition);
                     break;
                 }
@@ -169,7 +176,7 @@ namespace ChessV2
                 {
                     if (turn)
                     {
-                        Moves.Add(move);
+                        Moves.Add(new Move(this, move, this.AIposition.Item1, this.AIposition.Item2, true));
                     }
                     else
                     {
@@ -179,7 +186,7 @@ namespace ChessV2
                 }
                 if (turn)
                 {
-                    Moves.Add(move);
+                    Moves.Add(new Move(this, move, this.AIposition.Item1, this.AIposition.Item2));
                 }
                 else
                 {
@@ -211,7 +218,7 @@ namespace ChessV2
             char piece = CharRep;
             if (piece == 'Q')
             {
-                piece = QueenCheckType(AIposition, oppositeKing.AIposition);
+                piece = QueenCheckType(oppositeKing.AIposition, AIposition);
             }
             if (piece == 'B')
             {
@@ -242,11 +249,10 @@ namespace ChessV2
             return move.Item1 == 0 || move.Item2 == 0;
         }
 
-        private void GetPinnedPiece(List<(int, int)> moves, Dictionary<(int, int), Piece> occupiedSquares, Piece oppositeKing, List<Move> moveHistory)
+        private void GetPinnedPiece(List<(int, int)> moves, Dictionary<(int, int), Piece> occupiedSquares, Piece oppositeKing, Move lastMove)
         {
             int PieceCount = 0;
             List<Piece> pieces = new List<Piece>();
-            Piece P = oppositeKing;
             char checkType = QueenCheckType(AIposition, oppositeKing.AIposition);
             if (moves.Contains(oppositeKing.AIposition))
             {
@@ -262,7 +268,6 @@ namespace ChessV2
                         {
                             if (!occupiedSquares[move].EnPassant)
                             {
-                                Console.WriteLine("Breaking at !Enpassant");
                                 break;
                             }
                             if (PieceCount == 0)
@@ -270,7 +275,7 @@ namespace ChessV2
                                 PieceCount += 1;
                                 pieces.Add(occupiedSquares[move]);
                             }
-                            
+
                             continue;
                         }
                         if (occupiedSquares[move].King)
@@ -289,41 +294,43 @@ namespace ChessV2
                         pieces.Add(occupiedSquares[move]);
                         PieceCount += 1;
                     }
-                    Console.WriteLine(PieceCount);
-                    if (PieceCount == 1)
+                }
+                if (PieceCount == 1)
+                {
+                    if (pieces[0].CharRep == 'P')
                     {
-                        Console.WriteLine(pieces[0]);
-                        if (pieces[0].CharRep == 'P')
-                        {
 
-                            if (pieces[0].EnPassant)
-                            {
-                                if (pieces[0].Colour == oppositeKing.Colour)
-                                {
-                                    pieces[0].Moves.Remove(pieces[0].Moves.Last());
-                                }
-                                else
-                                {
-                                    EnPassantCheck(pieces[0].AIposition, occupiedSquares);
-                                }
-                            }
-                        }
-                        else
+                        if (pieces[0].EnPassant)
                         {
-                            pieces[0].Moves.Clear();
-                            if (pieces[0].CharRep == checkType || pieces[0].CharRep == 'Q')
+                            if (pieces[0].Colour == oppositeKing.Colour && pieces[0].Moves.Count > 0)
                             {
-                                for (int i = 0; i < moves.IndexOf(pieces[0].AIposition); i++)
-                                {
-                                    occupiedSquares[move].Moves.Add(moves[i]);
-                                }
-                                occupiedSquares[move].Moves.Add(AIposition);
-                                break;
+                                pieces[0].Moves.Remove(pieces[0].Moves.Last());
+                            }
+                            else
+                            {
+                                EnPassantCheck(pieces[0].AIposition, occupiedSquares);
                             }
                         }
+                    }
+                    else
+                    {
+                        Piece p = pieces[0];
+                        p.Moves.Clear();
+                        if (pieces[0].CharRep == checkType || pieces[0].CharRep == 'Q')
+                        {
+                            for (int i = 0; i < moves.IndexOf(p.AIposition); i++)
+                            {
+                                p.Moves.Add(new Move(p, moves[i], p.AIposition.Item1, p.AIposition.Item2));
+                            }
+                            pieces[0].Moves.Add(new Move(p, AIposition, p.AIposition.Item1, p.AIposition.Item2, true));
+                            
+                        }
+                        pieces[0].IsPinned = true;
                         
                     }
+                        
                 }
+                
 
             }
         }
@@ -333,12 +340,19 @@ namespace ChessV2
             (int, int) posToCheck = (position.Item1 + 1, position.Item2);
             if (occupiedSquares.ContainsKey(posToCheck) && occupiedSquares[posToCheck].EnPassant)
             {
-                occupiedSquares[posToCheck].Moves.Remove(occupiedSquares[posToCheck].Moves.Last());
+                if (occupiedSquares[posToCheck].Moves.Count > 0)
+                {
+                    occupiedSquares[posToCheck].Moves.Remove(occupiedSquares[posToCheck].Moves.Last());
+                }
+                
             }
             posToCheck.Item1 -= 2;
             if (occupiedSquares.ContainsKey(posToCheck) && occupiedSquares[posToCheck].EnPassant)
             {
-                occupiedSquares[posToCheck].Moves.Remove(occupiedSquares[posToCheck].Moves.Last());
+                if (occupiedSquares[posToCheck].Moves.Count > 0)
+                {
+                    occupiedSquares[posToCheck].Moves.Remove(occupiedSquares[posToCheck].Moves.Last());
+                }
             }
         }
     }

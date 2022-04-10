@@ -14,7 +14,7 @@ namespace ChessV2
         public List<(int, int)> BaseMovesBlack = new List<(int, int)> { (0, -1) };
 
 
-        public Pawn((int, int) position, (int, int) aiposition, List<(int, int)> moves, bool colour, Char charRep = 'P', int pointsValue=1, bool enPassant=false, bool king = false, bool firstMove=true, bool isPinned = false)
+        public Pawn((int, int) position, (int, int) aiposition, List<Move> moves, bool colour, Char charRep = 'P', int pointsValue=100, bool enPassant=false, bool king = false, bool firstMove=true, bool isPinned = false)
             :base(position, aiposition, moves, colour, charRep, pointsValue, enPassant, king, firstMove, isPinned)
         {
         }
@@ -40,9 +40,9 @@ namespace ChessV2
             return (Colour ? BaseMovesWhite : BaseMovesBlack);
         }
 
-        public override void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, List<Move> moveHistory)
+        public override void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, Move lastMove, ref HashSet<char> checkingPieces)
         {
-            PawnCaptures(occupiedSquares, ref protectedSquares, turn, ref blockCheckMoves);
+            PawnCaptures(occupiedSquares, ref protectedSquares, turn, ref blockCheckMoves, ref checkingPieces);
             if (turn)
             {
                 (int, int) moveToAdd;
@@ -61,21 +61,18 @@ namespace ChessV2
                     {
                         continue;
                     }
-                    Moves.Add(moveToAdd);
+                    Moves.Add(new Move(this, moveToAdd, AIposition.Item1, AIposition.Item2));
                 }
-                if (moveHistory.Count > 0)
+                if (lastMove.P.CharRep == 'P' && (lastMove.Coords.Item2 == 4 && lastMove.StartRank == 2) || (lastMove.Coords.Item2 == 5 && lastMove.StartRank == 7))
                 {
-                    Move lastMove = moveHistory.Last();
-                    if (lastMove.P.CharRep == 'P' && (lastMove.Coords.Item2 == 4 && lastMove.StartRank == 2) || (lastMove.Coords.Item2 == 5 && lastMove.StartRank == 7))
-                    {
-                        EnPassantCheck((0, 0), occupiedSquares);
-                    }
+                    EnPassantCheck((0, 0), occupiedSquares);
                 }
+                
             }
 
         }
 
-        private void PawnCaptures(Dictionary<(int, int), Piece> occupiedSquares, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves)
+        private void PawnCaptures(Dictionary<(int, int), Piece> occupiedSquares, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref HashSet<char> checkingPieces)
         {
             (int, int)[] whiteCaptures = new (int, int)[] { (-1, 1), (1, 1) };
             (int, int)[] blackCaptures = new (int, int)[] { (-1, -1), (1, -1) };
@@ -91,11 +88,12 @@ namespace ChessV2
                     if (IsCheck(moveToAdd, occupiedSquares))
                     {
                         blockCheckMoves.Add(Position);
+                        checkingPieces.Add(CharRep);
                     }
                     
                     if (turn)
                     {
-                        Moves.Add(moveToAdd);
+                        Moves.Add(new Move(this, moveToAdd, AIposition.Item1, AIposition.Item2, true));
                     }
                 }
                 if (!turn && CheckMoveOnBoard(moveToAdd))
@@ -112,14 +110,14 @@ namespace ChessV2
             {
                 occupiedSquares[posToCheck].EnPassant = true;
                 EnPassant = true;
-                Moves.Add((posToCheck.Item1 ,posToCheck.Item2 + (Colour ? 1 : -1)));
+                Moves.Add(new Move(this, (posToCheck.Item1 ,posToCheck.Item2 + (Colour ? 1 : -1)), AIposition.Item1, AIposition.Item2, true));
             }
             posToCheck.Item1 -= 2;
             if (occupiedSquares.ContainsKey(posToCheck) && occupiedSquares[posToCheck].CharRep == 'P' && occupiedSquares[posToCheck].Colour != Colour)
             {
                 occupiedSquares[posToCheck].EnPassant = true;
                 EnPassant = true;
-                Moves.Add((posToCheck.Item1, posToCheck.Item2 + (Colour ? 1 : -1)));
+                Moves.Add(new Move(this, (posToCheck.Item1, posToCheck.Item2 + (Colour ? 1 : -1)), AIposition.Item1, AIposition.Item2, true));
             }
         }
     }   

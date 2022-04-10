@@ -10,7 +10,7 @@ namespace ChessV2
         public List<(int, int)> BaseMoves = new List<(int, int)> { (2, 1), (-2, 1), (-2, -1), (2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2) };
 
 
-        public Knight( (int, int) position, (int, int) aiposition, List<(int, int)> moves, bool colour, Char charRep = 'N', int pointsValue=3, bool enPassant=false, bool king = false, bool firstMove = false, bool isPinned = false)
+        public Knight( (int, int) position, (int, int) aiposition, List<Move> moves, bool colour, Char charRep = 'N', int pointsValue=320, bool enPassant=false, bool king = false, bool firstMove = false, bool isPinned = false)
             : base(position, aiposition, moves, colour, charRep, pointsValue, enPassant, king, firstMove, isPinned)
         {
         }
@@ -32,7 +32,7 @@ namespace ChessV2
             return BaseMoves;
         }
 
-        public override void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, List<Move> moveHistory)
+        public override void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, Move lastMove, ref HashSet<char> checkingPieces)
         {
             (int, int) moveToAdd;
             foreach ((int, int) move in moves)
@@ -48,16 +48,22 @@ namespace ChessV2
                 }
                 if (turn)
                 {
-                    Moves.Add(moveToAdd);
+                    Moves.Add(new Move(this, moveToAdd, AIposition.Item1, AIposition.Item2, CheckForCapture(occupiedSquares, moveToAdd) ? true : false));
                 }
                 else
                 {
                     protectedSquares.Add(moveToAdd);
                 }
-                if (IsCheck(move, occupiedSquares))
+                if (IsCheck(moveToAdd, occupiedSquares))
                 {
                     checkCount += 1;
                     blockCheckMoves.Clear();
+                    foreach ((int, int) coord in moves)
+                    {
+                        illegalKingMoves.Add(GenNewPosition(coord));
+                    }
+                    blockCheckMoves.Add(AIposition);
+                    checkingPieces.Add(CharRep);
                 }
             }
         }

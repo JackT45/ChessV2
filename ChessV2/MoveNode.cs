@@ -19,22 +19,17 @@ namespace ChessV2
             get; set;
         }
 
-        public int PointsValue
+        public double Value
         {
             get; set;
         }
 
-        public bool Terminal
-        {
-            get; set;
-        }
-
-        public MoveNode(Move move, List<MoveNode> children, MoveNode parent=null, int pointsValue = 0, bool terminal = false)
+        public MoveNode(Move move, List<MoveNode> children, double value = 0, MoveNode parent = null)
         {
             Move = move;
             Children = children;
             Parent = parent;
-            PointsValue = pointsValue;
+            Value = value;
         }
     }
 }

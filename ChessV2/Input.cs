@@ -15,25 +15,25 @@ namespace ChessV2
         private (int, int) move;
         //private string Input;
 
-        public Input(string input)
+        public Input(string input, bool turn)
         {
-            if (input == "O-O")
+            if (input.ToUpper() == "O-O")
             {
-                piece = 'C';
-                startFile = 8;
+                piece = 'K';
+                startFile = 5;
                 isPiece = true;
                 isStartFile = true;
-                move = (7, 6);
+                move = (7, turn ? 1 : 8);
 
             }
-            if (input == "O-O-O")
+            if (input.ToUpper() == "O-O-O")
             {
-                piece = 'C';
-                startFile = 1;
+                piece = 'K';
+                startFile = 5;
                 isPiece = true;
                 isStartFile = true;
                 
-                move = (3, 4);
+                move = (3, turn ? 1 : 8);
             }
             if (isPiece == false)
             {
