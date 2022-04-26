@@ -350,6 +350,11 @@ namespace ChessV2
                 }
             }
         }
+
+        public virtual double Evaluate()
+        {
+            return PointsValue;
+        }
     }
 }
 
