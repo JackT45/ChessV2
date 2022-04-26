@@ -145,7 +145,6 @@ namespace ChessV2
                 foreach (MoveNode child in currentNode.Children)
                 {
                     List<Move> changes = MakeMove(gameboard, child.Move);
-                    Console.WriteLine(gameboard);
                     double ChildValue = GenerateTree(gameboard, child, depth + 1, !maximiser, alpha, beta);
                     value = Math.Max(value, ChildValue);
                     RevertChanges(gameboard, changes);
@@ -185,29 +184,30 @@ namespace ChessV2
         {
             //This needs fleshing out, include transposition tables and space advantage
             //currently only applies to black as the maximising player
+            //consider each piece class containing an evaluation function
             double pieceBalance = 0;
             foreach (KeyValuePair<(int, int), Piece> kvp in gameboard.OccupiedSquares)
             {
                 if (kvp.Value.Colour)
                 {
-                    pieceBalance -= kvp.Value.PointsValue;
+                    pieceBalance -= kvp.Value.Evaluate();
                 }
                 else
                 {
-                    pieceBalance += kvp.Value.PointsValue;
+                    pieceBalance += kvp.Value.Evaluate();
                 }
             }
-            if (currentNode.Move.P.CharRep != 'P' && gameboard.ProtectedSquares.Contains(currentNode.Move.Coords))
-            {
-                if (currentNode.Move.P.Colour)
-                {
-                    pieceBalance += currentNode.Move.P.PointsValue;
-                }
-                else
-                {
-                    pieceBalance -= currentNode.Move.P.PointsValue;
-                }
-            }
+            //if (currentNode.Move.P.CharRep != 'P' && gameboard.ProtectedSquares.Contains(currentNode.Move.Coords))
+            //{
+            //    if (currentNode.Move.P.Colour)
+            //    {
+            //        pieceBalance -= currentNode.Move.P.PointsValue;
+            //    }
+            //    else
+            //    {
+            //        pieceBalance += currentNode.Move.P.PointsValue;
+            //    }
+            //}
             return pieceBalance;
         }
 
