@@ -243,7 +243,8 @@ namespace ChessV2
         {
             return move.Item1 == 0 || move.Item2 == 0;
         }
-
+        
+        //This is very messy. Refactor needed
         private void GetPinnedPiece(List<(int, int)> moves, Dictionary<(int, int), Piece> occupiedSquares, Piece oppositeKing)
         {
             int PieceCount = 0;
