@@ -244,6 +244,8 @@ namespace ChessV2
             return move.Item1 == 0 || move.Item2 == 0;
         }
 
+
+        
         private void GetPinnedPiece(List<(int, int)> moves, Dictionary<(int, int), Piece> occupiedSquares, Piece oppositeKing)
         {
             int PieceCount = 0;
@@ -261,30 +263,12 @@ namespace ChessV2
                     {
                         if (CheckSameColour(occupiedSquares, move))
                         {
-                            if (!occupiedSquares[move].EnPassant)
-                            {
-                                break;
-                            }
-                            if (PieceCount == 0)
-                            {
-                                PieceCount += 1;
-                                pieces.Add(occupiedSquares[move]);
-                            }
-
-                            continue;
+                            EnPassantPin(occupiedSquares, move);
+                            return;
                         }
                         if (occupiedSquares[move].King)
                         {
                             break;
-                        }
-                        if (occupiedSquares[move].CharRep == 'P')
-                        {
-                            if (PieceCount == 0)
-                            {
-                                PieceCount += 1;
-                                pieces.Add(occupiedSquares[move]);
-                            }
-                            continue;
                         }
                         pieces.Add(occupiedSquares[move]);
                         PieceCount += 1;
@@ -292,42 +276,30 @@ namespace ChessV2
                 }
                 if (PieceCount == 1)
                 {
-                    if (pieces[0].CharRep == 'P')
+                    Piece p = pieces[0];
+                    p.Moves.Clear();
+                    if (pieces[0].CharRep == checkType || pieces[0].CharRep == 'Q')
                     {
-
-                        if (pieces[0].EnPassant)
+                        for (int i = 0; i < moves.IndexOf(p.AIposition); i++)
                         {
-                            if (pieces[0].Colour == oppositeKing.Colour && pieces[0].Moves.Count > 0)
-                            {
-                                pieces[0].Moves.Remove(pieces[0].Moves.Last());
-                            }
-                            else
-                            {
-                                EnPassantCheck(pieces[0].AIposition, occupiedSquares);
-                            }
+                            p.Moves.Add(new Move(p, moves[i], p.AIposition.Item1, p.AIposition.Item2));
                         }
-                    }
-                    else
-                    {
-                        Piece p = pieces[0];
-                        p.Moves.Clear();
-                        if (pieces[0].CharRep == checkType || pieces[0].CharRep == 'Q')
-                        {
-                            for (int i = 0; i < moves.IndexOf(p.AIposition); i++)
-                            {
-                                p.Moves.Add(new Move(p, moves[i], p.AIposition.Item1, p.AIposition.Item2));
-                            }
-                            pieces[0].Moves.Add(new Move(p, AIposition, p.AIposition.Item1, p.AIposition.Item2, true));
+                        pieces[0].Moves.Add(new Move(p, AIposition, p.AIposition.Item1, p.AIposition.Item2, true));
                             
-                        }
-                        pieces[0].IsPinned = true;
-                        
                     }
-                        
+                    pieces[0].IsPinned = true;          
                 }
-                
-
             }
+        }
+
+        private void EnPassantPin(Dictionary<(int, int), Piece> occupiedSquares, (int, int) move)
+        {
+            if (!occupiedSquares[move].EnPassant)
+            {
+                return;
+            }
+            EnPassantCheck(move, occupiedSquares);
+
         }
 
         public virtual void EnPassantCheck((int, int) position, Dictionary<(int, int), Piece> occupiedSquares)
