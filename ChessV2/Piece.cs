@@ -124,7 +124,7 @@ namespace ChessV2
             return nextMoves;
         }
 
-        public virtual void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, Move lastMove, ref HashSet<Char> checkingPieces)
+        public virtual void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, Move lastMove)
         {
             bool pinChecked = false;
             if (IsPinned)
@@ -168,7 +168,6 @@ namespace ChessV2
                     {
                         illegalKingMoves.Add(coord);
                     }
-                    checkingPieces.Add(CharRep);
                     blockCheckMoves.Add(AIposition);
                     break;
                 }
@@ -243,14 +242,8 @@ namespace ChessV2
         {
             return move.Item1 == 0 || move.Item2 == 0;
         }
-<<<<<<< HEAD
-
-
-        
-=======
         
         //This is very messy. Refactor needed
->>>>>>> 0cff1fb325bf53b12d409e8d160b785865864cd0
         private void GetPinnedPiece(List<(int, int)> moves, Dictionary<(int, int), Piece> occupiedSquares, Piece oppositeKing)
         {
             int PieceCount = 0;
