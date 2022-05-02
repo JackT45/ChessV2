@@ -8,7 +8,6 @@ namespace ChessV2
         public List<Move> MoveHistory = new List<Move>();
         public int MoveCount = 0;
         public int PieceBalance = 0;
-        public HashSet<Char> checkingPieces = new HashSet<char>();
         public HashSet<(int, int)> ProtectedSquares = new HashSet<(int, int)>();
         public HashSet<(int, int)> BlockCheckMoves = new HashSet<(int, int)>();
         public HashSet<(int, int)> IllegalKingMoves = new HashSet<(int, int)>();
@@ -25,9 +24,9 @@ namespace ChessV2
         public Board()
         {
             SlidingPieces.Add(new Rook((1, 1), (1, 1), new List<Move>(), true));
-            //Pieces.Add(new Knight((2, 1), (2, 1), new List<Move>(), true));
-            //SlidingPieces.Add(new Bishop((3, 1), (3, 1), new List<Move>(), true));
-            //SlidingPieces.Add(new Queen((4, 1), (4, 1), new List<Move>(), true));
+            Pieces.Add(new Knight((2, 1), (2, 1), new List<Move>(), true));
+            SlidingPieces.Add(new Bishop((3, 1), (3, 1), new List<Move>(), true));
+            SlidingPieces.Add(new Queen((4, 1), (4, 1), new List<Move>(), true));
             SlidingPieces.Add(new Bishop((6, 1), (6, 1), new List<Move>(), true));
             Pieces.Add(new Knight((7, 1), (7, 1), new List<Move>(), true));
             SlidingPieces.Add(new Rook((8, 1), (8, 1), new List<Move>(), true));
@@ -154,13 +153,13 @@ namespace ChessV2
         {
             foreach (Piece P in Pieces)
             {
-                P.GenerateMoves(OccupiedSquares, P.GetMoves(), ref ProtectedSquares, (turn == P.Colour ? true : false), ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, (turn ? Kings[1] : Kings[0]), lastMove, ref checkingPieces);
+                P.GenerateMoves(OccupiedSquares, P.GetMoves(), ref ProtectedSquares, (turn == P.Colour ? true : false), ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, (turn ? Kings[1] : Kings[0]), lastMove);
             }
             foreach (Piece P in SlidingPieces)
             {
                 foreach ((int, int) move in P.GetMoves())
                 {
-                    P.GenerateMoves(OccupiedSquares, P.GetNextMoves(move), ref ProtectedSquares, (turn == P.Colour ? true : false), ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, (P.Colour ? Kings[1] : Kings[0]), lastMove, ref checkingPieces);
+                    P.GenerateMoves(OccupiedSquares, P.GetNextMoves(move), ref ProtectedSquares, (turn == P.Colour ? true : false), ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, (P.Colour ? Kings[1] : Kings[0]), lastMove);
                 }
             }
             if (checkCount > 1)
@@ -169,13 +168,13 @@ namespace ChessV2
             }
             if (turn)
                 {
-                Kings[0].GenerateMoves(OccupiedSquares, Kings[0].GetMoves(), ref ProtectedSquares, true, ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, Kings[1], lastMove, ref checkingPieces);
-                Kings[1].GenerateMoves(OccupiedSquares, Kings[1].GetMoves(), ref ProtectedSquares, false, ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, Kings[0], lastMove, ref checkingPieces);
+                Kings[0].GenerateMoves(OccupiedSquares, Kings[0].GetMoves(), ref ProtectedSquares, true, ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, Kings[1], lastMove);
+                Kings[1].GenerateMoves(OccupiedSquares, Kings[1].GetMoves(), ref ProtectedSquares, false, ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, Kings[0], lastMove);
                 }
                 else
                 {
-                Kings[1].GenerateMoves(OccupiedSquares, Kings[1].GetMoves(), ref ProtectedSquares, true, ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, Kings[1], lastMove, ref checkingPieces);
-                Kings[0].GenerateMoves(OccupiedSquares, Kings[0].GetMoves(), ref ProtectedSquares, false, ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, Kings[0], lastMove, ref checkingPieces);
+                Kings[1].GenerateMoves(OccupiedSquares, Kings[1].GetMoves(), ref ProtectedSquares, true, ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, Kings[1], lastMove);
+                Kings[0].GenerateMoves(OccupiedSquares, Kings[0].GetMoves(), ref ProtectedSquares, false, ref BlockCheckMoves, ref checkCount, ref IllegalKingMoves, Kings[0], lastMove);
                 }
             SelectLegalMoves();
         }
@@ -230,7 +229,7 @@ namespace ChessV2
                         }
                         foreach (Move move in P.Moves)
                         {
-                            if (BlockCheckMoves.Contains(move.Coords))
+                            if (!ProtectedSquares.Contains(move.Coords))
                             {
                                 LegalMoves.Add(move);
                             }
@@ -352,7 +351,6 @@ namespace ChessV2
             BlockCheckMoves.Clear();
             ProtectedSquares.Clear();
             IllegalKingMoves.Clear();
-            checkingPieces.Clear();
             checkCount = 0;
         }
 
