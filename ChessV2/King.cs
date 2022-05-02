@@ -26,7 +26,7 @@ namespace ChessV2
             return BaseMoves;
         }
 
-        public override void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, Move lastMove, ref HashSet<char> checkingPieces)
+        public override void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, Move lastMove)
         {
             (int, int) moveToAdd;
             foreach ((int, int) move in moves)
@@ -46,6 +46,10 @@ namespace ChessV2
                 }
                 if (CheckSameColour(occupiedSquares, moveToAdd))
                 {
+                    if (!turn)
+                    {
+                        protectedSquares.Add(moveToAdd);
+                    }
                     continue;
                 }
                 if (turn)

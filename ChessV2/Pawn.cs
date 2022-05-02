@@ -98,16 +98,15 @@ namespace ChessV2
             return (Colour ? BaseMovesWhite : BaseMovesBlack);
         }
 
-        public override void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, Move lastMove, ref HashSet<char> checkingPieces)
+        public override void GenerateMoves(Dictionary<(int, int), Piece> occupiedSquares, List<(int, int)> moves, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount, ref HashSet<(int, int)> illegalKingMoves, Piece oppositeKing, Move lastMove)
         {
-            PawnCaptures(occupiedSquares, ref protectedSquares, turn, ref blockCheckMoves, ref checkingPieces, ref checkCount);
+            PawnCaptures(occupiedSquares, ref protectedSquares, turn, ref blockCheckMoves, ref checkCount);
             if (turn)
             {
                 (int, int) moveToAdd;
                 foreach ((int, int) move in moves)
                 {
                     moveToAdd = GenNewPosition(move);
-                    Console.WriteLine(moveToAdd);
                     if (CheckSameColour(occupiedSquares, moveToAdd))
                     {
                         break;
@@ -131,7 +130,7 @@ namespace ChessV2
 
         }
 
-        private void PawnCaptures(Dictionary<(int, int), Piece> occupiedSquares, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref HashSet<char> checkingPieces, ref int checkCount)
+        private void PawnCaptures(Dictionary<(int, int), Piece> occupiedSquares, ref HashSet<(int, int)> protectedSquares, bool turn, ref HashSet<(int, int)> blockCheckMoves, ref int checkCount)
         {
             (int, int)[] whiteCaptures = new (int, int)[] { (-1, 1), (1, 1) };
             (int, int)[] blackCaptures = new (int, int)[] { (-1, -1), (1, -1) };
@@ -142,12 +141,15 @@ namespace ChessV2
                 {
                     if (CheckSameColour(occupiedSquares, moveToAdd))
                     {
+                        if (!turn)
+                        {
+                            protectedSquares.Add(moveToAdd);
+                        }
                         continue;
                     }
                     if (IsCheck(moveToAdd, occupiedSquares))
                     {
                         checkCount += 1;
-                        checkingPieces.Add(CharRep);
                     }
                     
                     if (turn)
