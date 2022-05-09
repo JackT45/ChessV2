@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+//5296600
 namespace ChessV2
 {
     public class AI
@@ -112,30 +113,30 @@ namespace ChessV2
             gameboard.OrderMoves();
             foreach (Move move in gameboard.LegalMoves)
             {
-                if (gameboard.MoveCount + depth < 5)
-                {
-                    if (move.P.CharRep == 'R')
-                    {
-                        continue;
-                    }
-                    if (depth != 0 && move.P == currentNode.Parent.Move.P)
-                    {
-                        continue;
-                    }
+                //if (gameboard.MoveCount + depth < 5)
+                //{
+                //    if (move.P.CharRep == 'R')
+                //    {
+                //        continue;
+                //    }
+                //    if (depth != 0 && move.P == currentNode.Parent.Move.P)
+                //    {
+                //        continue;
+                //    }
                     
-                }
+                //}
                 MoveNode nextMove = new MoveNode(move, new List<MoveNode>(), currentNode.Move.P.Colour ? int.MinValue : int.MaxValue, currentNode);
                 currentNode.Children.Add(nextMove);
             }
         }
 
-        private double GenerateTree(Board gameboard, MoveNode currentNode, int depth, bool maximiser, double alpha=int.MinValue, double beta=int.MaxValue)
+        private double GenerateTree(Board gameboard, MoveNode currentNode, int depth, bool maximiser, double alpha, double beta)
         {
             
             if (depth == MaxDepth)
             {
                 NodesSearched += 1;
-                return Evaluate(gameboard, currentNode);
+                return EvaluateBoard(gameboard, currentNode);
             }
             gameboard.turn = !currentNode.Move.P.Colour;
             AddNodesChildren(gameboard, currentNode, depth);
@@ -144,17 +145,24 @@ namespace ChessV2
                 double value = int.MinValue;
                 foreach (MoveNode child in currentNode.Children)
                 {
+                    
                     List<Move> changes = MakeMove(gameboard, child.Move);
-                    double ChildValue = GenerateTree(gameboard, child, depth + 1, !maximiser, alpha, beta);
-                    value = Math.Max(value, ChildValue);
+                    child.Value = GenerateTree(gameboard, child, depth + 1, !maximiser, alpha, beta);
+                    value = Math.Max(value, child.Value);
                     RevertChanges(gameboard, changes);
+                    alpha = Math.Max(alpha, value);
                     if (value >= beta)
                     {
                         break;
                     }
-                    alpha = Math.Max(alpha, value);
-                    child.Value = ChildValue;
+
+                    if (depth == 5)
+                    {
+                        currentNode.Parent.Parent.Parent.Parent.Root = child;
+                    }
+                    
                 }
+                
                 return value;
             }
             else
@@ -164,23 +172,28 @@ namespace ChessV2
                 foreach (MoveNode child in currentNode.Children)
                 {
                     List<Move> changes = MakeMove(gameboard, child.Move);
-                    double ChildValue = GenerateTree(gameboard, child, depth + 1, !maximiser, alpha, beta);
-                    value = Math.Min(value, ChildValue);
+                    child.Value = GenerateTree(gameboard, child, depth + 1, !maximiser, alpha, beta);
+                    value = Math.Min(value, child.Value);
                     RevertChanges(gameboard, changes);
+                    beta = Math.Min(beta, value);
                     if (value <= alpha)
                     {
                         break;
                     }
-                    beta = Math.Min(beta, value);
-                    child.Value = ChildValue;
+
+                    if (depth == 5)
+                    {
+                        currentNode.Parent.Parent.Parent.Parent.Root = child;
+                    }
 
                 }
+                
                 return value;
             }
             
         }
 
-        private double Evaluate(Board gameboard, MoveNode currentNode)
+        private double EvaluateBoard(Board gameboard, MoveNode currentNode)
         {
             //This needs fleshing out, include transposition tables and space advantage
             //currently only applies to black as the maximising player
@@ -213,15 +226,22 @@ namespace ChessV2
 
         public void FindBestMove(Board gameboard)
         {
-            Root.Value = GenerateTree(gameboard, Root, 0, true);
+
+            Root.Value = GenerateTree(gameboard, Root, 0, true, int.MinValue, int.MaxValue);
             Console.WriteLine(Root.Value);
+            double minVal = int.MinValue;
             foreach (MoveNode child in Root.Children)
             {
                 Console.WriteLine($"{child.Move}, {child.Value}");
-                if (child.Value == Root.Value)
+                if (child.Root != null)
                 {
+                    PrintMoveSequence(child);
+                }
+                if (child.Value > minVal)
+                {
+                    
+                    minVal = child.Value;
                     BestMove = child.Move;
-                    break;
                 }
             }
             Root.Children.Clear();
@@ -270,5 +290,9 @@ namespace ChessV2
             gameboard.BuildOccupiedSquares();
         }
 
+        private void PrintMoveSequence(MoveNode node)
+        {
+            Console.WriteLine($"{node.Move}, {node.Root.Parent.Parent.Parent.Parent.Move}, {node.Root.Parent.Parent.Parent.Move}, {node.Root.Parent.Parent.Move}, {node.Root.Parent.Move}, {node.Root.Move}");
+        }
     }
 }
